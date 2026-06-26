@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParlorPay - Gaming Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @keyframes flashRed {
+            0% { background-color: #fee2e2; border-color: #ef4444; }
+            50% { background-color: #fca5a5; border-color: #b91c1c; }
+            100% { background-color: #fee2e2; border-color: #ef4444; }
+        }
+        .alarm-active {
+            animation: flashRed 1s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans h-screen flex overflow-hidden w-full relative">
+
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white flex flex-col transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out shadow-xl">
+        <div class="p-6 flex items-center justify-between border-b border-slate-700">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-gamepad text-indigo-400 text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wider">ParlorPay<span class="text-indigo-400">.</span></h1>
+            </div>
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <nav class="flex-1 p-4 overflow-y-auto">
+            <ul class="space-y-2">
+                <li><a href="#" class="flex items-center gap-3 bg-indigo-600 text-white px-4 py-3 rounded-lg shadow-md shadow-indigo-900/20"><i class="fa-solid fa-desktop w-5 text-center"></i> Dashboard</a></li>
+                <li><a href="#" class="flex items-center gap-3 hover:bg-slate-800 text-slate-300 px-4 py-3 rounded-lg transition"><i class="fa-solid fa-chart-line w-5 text-center"></i> Daily Reports</a></li>
+                <li><a href="#" class="flex items-center gap-3 hover:bg-slate-800 text-slate-300 px-4 py-3 rounded-lg transition"><i class="fa-solid fa-users w-5 text-center"></i> Customers</a></li>
+                <li><a href="#" class="flex items-center gap-3 hover:bg-slate-800 text-slate-300 px-4 py-3 rounded-lg transition"><i class="fa-solid fa-gear w-5 text-center"></i> Settings</a></li>
+            </ul>
+        </nav>
+        <div class="p-4 border-t border-slate-700">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center"><i class="fa-solid fa-store"></i></div>
+                <div>
+                    <p class="text-sm font-medium">Alpha Gaming</p>
+                    <p class="text-xs text-slate-400">Admin</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto w-full">
+        
+        <header class="bg-white shadow-sm border-b border-slate-200 p-4 md:p-6 flex justify-between items-center sticky top-0 z-10">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-600 hover:text-indigo-600 transition">
+                    <i class="fa-solid fa-bars text-2xl"></i>
+                </button>
+                <div>
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800">Live Dashboard</h2>
+                    <p class="text-xs md:text-sm text-slate-500 hidden sm:block">Manage active sessions and machines</p>
+                </div>
+            </div>
+            <div class="bg-green-100 text-green-800 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold flex items-center gap-2 text-sm md:text-base">
+                <i class="fa-solid fa-indian-rupee-sign"></i> <span class="hidden sm:inline">Today:</span> <span id="today-revenue">0</span>
+            </div>
+        </header>
+
+        <div class="p-4 md:p-6 max-w-7xl mx-auto w-full space-y-6 md:space-y-8">
+            
+            <div>
+                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800"><i class="fa-solid fa-network-wired text-slate-400"></i> Active Floor</h3>
+                <div id="machines-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Cards will be injected by JS -->
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800"><i class="fa-solid fa-receipt text-slate-400"></i> Recent Sessions (Ledger)</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <table class="w-full text-left text-sm min-w-[600px]">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="p-4 font-semibold text-slate-600">Time</th>
+                                <th class="p-4 font-semibold text-slate-600">Customer Name</th>
+                                <th class="p-4 font-semibold text-slate-600">Machine</th>
+                                <th class="p-4 font-semibold text-slate-600">Duration Played</th>
+                                <th class="p-4 font-semibold text-slate-600">Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledger-body" class="divide-y divide-slate-100">
+                            <!-- Rows injected by JS -->
+                            <tr>
+                                <td colspan="5" class="p-8 text-center text-slate-400 italic" id="empty-ledger">No sessions completed yet today.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="start-modal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-indigo-600 p-4 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg" id="modal-title">Start Session</h3>
+                <button onclick="closeModal()" class="text-indigo-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="modal-machine-id">
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Customer Name</label>
+                    <input type="text" id="input-name" placeholder="e.g. Rahul" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Duration (Hours)</label>
+                        <input type="number" id="input-hours" value="1" min="0.5" step="0.5" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Hourly Rate (₹)</label>
+                        <input type="number" id="input-rate" value="60" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex gap-3">
+                    <button onclick="startSession(false)" class="flex-1 bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition shadow-md shadow-indigo-200">
+                        Start Real Timer
+                    </button>
+                    <!-- Button specifically for testing so you don't have to wait an hour -->
+                    <button onclick="startSession(true)" class="flex-1 bg-amber-500 text-white font-semibold py-2.5 rounded-lg hover:bg-amber-600 transition shadow-md shadow-amber-200" title="Sets timer to 5 seconds to test alarm">
+                        Demo (5 secs)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extend Session Modal -->
+    <div id="extend-modal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-indigo-600 p-4 text-white flex justify-between items-center">
+                <h3 class="font-bold text-lg" id="extend-modal-title">Extend Session</h3>
+                <button onclick="closeExtendModal()" class="text-indigo-200 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="extend-modal-machine-id">
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Add Duration (Hours)</label>
+                    <input type="number" id="extend-input-hours" value="1" min="0.5" step="0.5" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex gap-3">
+                    <button onclick="confirmExtend()" class="flex-1 bg-indigo-600 text-white font-semibold py-2.5 rounded-lg hover:bg-indigo-700 transition shadow-md shadow-indigo-200">
+                        Confirm Extension
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        let totalRevenue = 0;
+        let machines = [
+            { id: 1, name: "PC 01 - Standard", type: "PC", icon: "fa-desktop", status: "available", session: null },
+            { id: 2, name: "PC 02 - Standard", type: "PC", icon: "fa-desktop", status: "available", session: null },
+            { id: 3, name: "PC 03 - Standard", type: "PC", icon: "fa-desktop", status: "available", session: null },
+            { id: 4, name: "PC 04 - Standard", type: "PC", icon: "fa-desktop", status: "available", session: null },
+            { id: 5, name: "PC 05 - Standard", type: "PC", icon: "fa-desktop", status: "available", session: null },
+            { id: 6, name: "PS5 - Lounge 1", type: "PS5", icon: "fa-playstation", status: "available", session: null },
+            { id: 7, name: "PS5 - Lounge 2", type: "PS5", icon: "fa-playstation", status: "available", session: null }
+        ];
+
+        let ledger = [];
+
+        let audioCtx;
+        
+        // Unblock audio context on user gesture
+        function initAudio() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch(e) { console.log("Audio init error", e); }
+        }
+
+        function playAlarmSound() {
+            try {
+                initAudio(); // Ensure it is active
+                
+                // Play 3 noticeable beeps
+                for(let i=0; i<3; i++) {
+                    const osc = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    osc.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + (i * 0.4)); // A5 note
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime + (i * 0.4));
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (i * 0.4) + 0.3);
+                    osc.start(audioCtx.currentTime + (i * 0.4));
+                    osc.stop(audioCtx.currentTime + (i * 0.4) + 0.3);
+                }
+            } catch (e) { console.log("Audio not supported or blocked", e); }
+        }
+
+        function renderMachines() {
+            const grid = document.getElementById('machines-grid');
+            grid.innerHTML = '';
+
+            machines.forEach(machine => {
+                const card = document.createElement('div');
+                card.className = `rounded-xl p-5 border-2 transition-all relative overflow-hidden ${
+                    machine.status === 'available' 
+                        ? 'bg-white border-slate-200 hover:border-indigo-300 shadow-sm' 
+                        : machine.status === 'active'
+                            ? 'bg-indigo-50 border-indigo-400 shadow-md'
+                            : 'alarm-active shadow-lg'
+                }`;
+
+                let html = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-lg flex items-center justify-center ${machine.status === 'available' ? 'bg-slate-100 text-slate-500' : 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'}">
+                                <i class="fa-brands ${machine.icon} text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">${machine.name}</h4>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${machine.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-indigo-100 text-indigo-700'}">
+                                    ${machine.status}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                if (machine.status === 'available') {
+                    html += `
+                        <button onclick="openModal(${machine.id})" class="w-full mt-4 bg-white border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold py-2.5 rounded-lg transition flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-play text-sm"></i> Start Session
+                        </button>
+                    `;
+                } else {
+                    const s = machine.session;
+                    html += `
+                        <div class="bg-white/60 rounded-lg p-3 mb-4 space-y-1 text-sm border border-black/5">
+                            <p class="flex justify-between items-center"><span class="text-slate-500 text-xs font-semibold uppercase">Player</span> <span class="font-bold text-slate-800">${s.name}</span></p>
+                            <p class="flex justify-between items-center"><span class="text-slate-500 text-xs font-semibold uppercase">Rate</span> <span class="font-semibold text-slate-700">₹${s.rate}/hr</span></p>
+                        </div>
+                        
+                        <div class="text-center mb-4">
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Time Remaining</p>
+                            <div class="text-4xl font-black ${machine.status === 'alarm' ? 'text-red-600 drop-shadow-sm' : 'text-indigo-600'} font-mono" id="timer-${machine.id}">
+                                00:00:00
+                            </div>
+                        </div>
+                    `;
+
+                    html += `
+                        <div class="flex gap-2">
+                            <button onclick="openExtendModal(${machine.id})" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg transition text-sm">
+                                + Add Time
+                            </button>
+                            <button onclick="checkoutSession(${machine.id})" class="flex-1 ${machine.status === 'alarm' ? 'bg-red-600 hover:bg-red-700 shadow-md shadow-red-200' : 'bg-red-500 hover:bg-red-600'} text-white font-bold py-2 rounded-lg transition text-sm">
+                                Finish & Pay
+                            </button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = html;
+                grid.appendChild(card);
+            });
+        }
+
+        function openModal(machineId) {
+            const machine = machines.find(m => m.id === machineId);
+            document.getElementById('modal-title').innerText = `Start: ${machine.name}`;
+            document.getElementById('modal-machine-id').value = machineId;
+            document.getElementById('input-name').value = '';
+            document.getElementById('start-modal').classList.remove('hidden');
+            document.getElementById('start-modal').classList.add('flex');
+            setTimeout(() => document.getElementById('input-name').focus(), 100);
+        }
+
+        function closeModal() {
+            document.getElementById('start-modal').classList.add('hidden');
+            document.getElementById('start-modal').classList.remove('flex');
+        }
+
+        function startSession(isDemo) {
+            // UNBLOCK AUDIO: Initialize audio context right when the user clicks to start
+            initAudio();
+
+            const machineId = parseInt(document.getElementById('modal-machine-id').value);
+            const name = document.getElementById('input-name').value || "Guest";
+            const hours = parseFloat(document.getElementById('input-hours').value);
+            const rate = parseFloat(document.getElementById('input-rate').value);
+
+            let durationMs = hours * 60 * 60 * 1000;
+            if (isDemo) durationMs = 5000;
+
+            const machine = machines.find(m => m.id === machineId);
+            
+            machine.status = 'active';
+            machine.session = {
+                name: name,
+                hoursPlayed: hours,
+                rate: rate,
+                endTime: Date.now() + durationMs,
+                intervalId: setInterval(() => updateTimer(machineId), 1000)
+            };
+
+            closeModal();
+            renderMachines();
+            updateTimer(machineId);
+        }
+
+        function updateTimer(machineId) {
+            const machine = machines.find(m => m.id === machineId);
+            if (!machine || !machine.session) return;
+
+            const now = Date.now();
+            const remainingMs = machine.session.endTime - now;
+
+            if (remainingMs <= 0) {
+                clearInterval(machine.session.intervalId);
+                machine.status = 'alarm';
+                playAlarmSound();
+                renderMachines(); 
+                document.getElementById(`timer-${machineId}`).innerText = "00:00:00";
+            } else {
+                const el = document.getElementById(`timer-${machineId}`);
+                if(el) el.innerText = formatTime(remainingMs);
+            }
+        }
+
+        function formatTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+            const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+            const s = (totalSeconds % 60).toString().padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        // Extend Session Modal Handlers
+        function openExtendModal(machineId) {
+            const machine = machines.find(m => m.id === machineId);
+            document.getElementById('extend-modal-title').innerText = `Extend: ${machine.name}`;
+            document.getElementById('extend-modal-machine-id').value = machineId;
+            document.getElementById('extend-input-hours').value = 1; // Default to 1 hour
+            document.getElementById('extend-modal').classList.remove('hidden');
+            document.getElementById('extend-modal').classList.add('flex');
+            setTimeout(() => document.getElementById('extend-input-hours').focus(), 100);
+        }
+
+        function closeExtendModal() {
+            document.getElementById('extend-modal').classList.add('hidden');
+            document.getElementById('extend-modal').classList.remove('flex');
+        }
+
+        function confirmExtend() {
+            const machineId = parseInt(document.getElementById('extend-modal-machine-id').value);
+            const additionalHours = parseFloat(document.getElementById('extend-input-hours').value);
+            
+            if (!additionalHours || additionalHours <= 0) return;
+
+            const machine = machines.find(m => m.id === machineId);
+            const additionalMs = additionalHours * 60 * 60 * 1000;
+            
+            machine.session.hoursPlayed += additionalHours;
+            
+            if(machine.status === 'alarm') {
+                // If time had run out, start the new time from exactly right now
+                machine.session.endTime = Date.now() + additionalMs;
+            } else {
+                // If they still had time left, append the new time to the existing end time
+                machine.session.endTime += additionalMs;
+            }
+            
+            machine.status = 'active';
+            clearInterval(machine.session.intervalId); 
+            machine.session.intervalId = setInterval(() => updateTimer(machineId), 1000);
+            
+            closeExtendModal();
+            renderMachines();
+            updateTimer(machineId); // Update display immediately
+        }
+
+        function checkoutSession(machineId) {
+            const machine = machines.find(m => m.id === machineId);
+            const session = machine.session;
+            
+            clearInterval(session.intervalId);
+            
+            const amount = session.hoursPlayed * session.rate;
+            totalRevenue += amount;
+            document.getElementById('today-revenue').innerText = totalRevenue.toFixed(2);
+
+            const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            ledger.unshift({
+                time: timeStr,
+                name: session.name,
+                machineName: machine.name,
+                hours: session.hoursPlayed,
+                amount: amount
+            });
+            renderLedger();
+
+            machine.status = 'available';
+            machine.session = null;
+            renderMachines();
+        }
+
+        function renderLedger() {
+            const tbody = document.getElementById('ledger-body');
+            tbody.innerHTML = '';
+            
+            if(ledger.length === 0) {
+                 tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 italic" id="empty-ledger">No sessions completed yet today.</td></tr>`;
+                 return;
+            }
+
+            ledger.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100 last:border-0';
+                tr.innerHTML = `
+                    <td class="p-4 text-slate-500 text-xs font-mono">${row.time}</td>
+                    <td class="p-4 font-semibold text-slate-800">${row.name}</td>
+                    <td class="p-4 text-slate-600">${row.machineName}</td>
+                    <td class="p-4 text-slate-600">${row.hours} hr(s)</td>
+                    <td class="p-4 font-bold text-green-600">₹${row.amount.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Initialize UI
+        renderMachines();
+
+    </script>
+</body>
+</html>
